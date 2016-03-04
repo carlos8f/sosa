@@ -8,7 +8,9 @@ function ran (method) {
   state[method]++;
 }
 
-var collection = sosa(sosa.mem_backend, {
+var db = sosa(sosa.mem_backend);
+
+var humans = db('humans', {
   load: function (obj, opts, cb) {
     ran('load', obj, opts);
     cb(null, obj);
@@ -31,8 +33,6 @@ var collection = sosa(sosa.mem_backend, {
     }
   }
 });
-
-var humans = collection('humans');
 
 humans.load('carlos', function (err, human) {
   assert.ifError(err);
