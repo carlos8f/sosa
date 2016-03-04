@@ -75,6 +75,7 @@ humans.load('carlos', function (err, human) {
                       assert.ifError(err);
                       assert.deepEqual(results, [carlos, nick]);
                       assert.deepEqual(state, {save: 3, afterSave: 3, load: 8, destroy: 1});
+                      assert.equal(humans.whodat(carlos), 'los');
                       console.log('passed');
                     });
                   });
