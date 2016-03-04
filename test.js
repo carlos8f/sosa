@@ -76,7 +76,20 @@ humans.load('carlos', function (err, human) {
                       assert.deepEqual(results, [carlos, nick]);
                       assert.deepEqual(state, {save: 3, afterSave: 3, load: 8, destroy: 1});
                       assert.equal(humans.whodat(carlos), 'los');
-                      console.log('passed');
+                      humans.in('cool_club').select(function (err, results) {
+                        assert.ifError(err);
+                        assert.deepEqual(results, []);
+                        assert.deepEqual(state, {save: 3, afterSave: 3, load: 8, destroy: 1});
+                        humans.in('cool_club').save('carlos', {name: 'los'}, function (err, human) {
+                          assert.ifError(err);
+                          assert.deepEqual(carlos, human);
+                          humans.in('cool_club').select(function (err, results) {
+                            assert.ifError(err);
+                            assert.deepEqual(results, [carlos]);
+                            console.log('passed');
+                          });
+                        });
+                      });
                     });
                   });
                 });

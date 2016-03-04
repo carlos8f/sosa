@@ -2,17 +2,21 @@ var api = require('./api');
 
 module.exports = function (backend, backend_options) {
   backend_options || (backend_options = {});
-  var cache = {};
   return function (coll_name, coll_options) {
     coll_options || (coll_options = {});
-    function bindApi () {
-      var args = [].slice.call(arguments);
-      var coll_path = [coll_name].concat(args);
-      var store = backend(coll_path, backend_options);
-      return api(store, coll_options);
-    }
-    if (coll_options.func) return bindApi;
-    return bindApi();
+    var store = backend(coll_name, backend_options);
+    var coll = api(store, coll_options);
+    coll.in = function () {
+      var key_prefix = [].slice.call(arguments);
+      // shallow-copy options and append key prefix.
+      var opts = {};
+      Object.keys(backend_options).forEach(function (k) {
+        opts[k] = backend_options[k];
+      });
+      opts.key_prefix = (opts.key_prefix || []).slice().concat(key_prefix);
+      return api(backend(coll_name, opts), coll_options);
+    };
+    return coll;
   };
 };
 

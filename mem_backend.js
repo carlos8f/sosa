@@ -5,7 +5,9 @@ function hash (id) {
   return crypto.createHash('sha1').update(JSON.stringify(id)).digest('hex');
 }
 
-module.exports = function (coll_path, backend_options) {
+module.exports = function (coll_name, backend_options) {
+  backend_options || (backend_options = {});
+  var coll_path = [coll_name].concat(backend_options.key_prefix);
   var key = hash(coll_path);
   mem[key] || (mem[key] = {keys: [], values: {}});
   var coll = mem[key];
