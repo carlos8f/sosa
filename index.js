@@ -19,5 +19,3 @@ module.exports = function (backend, backend_options) {
     return coll;
   };
 };
-
-module.exports.mem_backend = require('./mem_backend');
