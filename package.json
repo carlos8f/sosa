@@ -1,6 +1,6 @@
 {
   "name": "sosa",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Simple Object Storage Abstraction, base module",
   "main": "index.js",
   "author": "Carlos Rodriguez <carlos@s8f.org> (http://s8f.org/)",
