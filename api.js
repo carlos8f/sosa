@@ -1,4 +1,13 @@
 module.exports = function (store, options) {
+  if (!store) {
+    throw new Error('must provide store');
+  }
+  options || (options = {})
+  if (!options.toId) {
+    options.toId = function (obj) {
+      return obj.id;
+    };
+  }
   var api = {
     load: function (id, opts, cb) {
       if (typeof opts === 'function') {
@@ -8,32 +17,29 @@ module.exports = function (store, options) {
       opts || (opts = {});
       if (!id) {
         var err = new Error('must provide id to load');
-        err.id = id;
         return cb(err);
       }
       store.load(id, opts, function (err, obj) {
         if (err) return cb(err);
-        if (options.load && opts.hooks !== false && obj !== null) {
+        if (options.load && opts.hooks !== false && obj) {
           options.load.call(api, obj, opts, cb);
         }
         else cb(null, obj);
       });
     },
-    save: function (id, obj, opts, cb) {
+    save: function (obj, opts, cb) {
       if (typeof opts === 'function') {
         cb = opts;
         opts = {};
       }
       opts || (opts = {});
-      if (!id) {
-        var err = new Error('must provide id to save');
-        err.id = id;
-        err.obj = obj;
+      if (!obj) {
+        var err = new Error('must provide obj to save');
         return cb(err);
       }
-      if (typeof obj === 'undefined' || obj === null) {
-        var err = new Error('must provide obj to save');
-        err.id = id;
+      var id = options.toId(obj);
+      if (!id) {
+        var err = new Error('could not get id to save');
         err.obj = obj;
         return cb(err);
       }
@@ -43,7 +49,7 @@ module.exports = function (store, options) {
             err.saved = false;
             return cb(err);
           }
-          withHooks(typeof retObj === 'undefined' ? obj : retObj);
+          withHooks(retObj || obj);
         });
       }
       else withHooks(obj);
@@ -55,7 +61,7 @@ module.exports = function (store, options) {
             err.obj = obj;
             return cb(err);
           }
-          if (typeof retObj !== 'undefined') obj = retObj;
+          if (retObj) obj = retObj;
           if (options.afterSave && opts.hooks !== false) {
             options.afterSave.call(api, obj, opts, function (err) {
               if (err) {
@@ -76,6 +82,11 @@ module.exports = function (store, options) {
         opts = {};
       }
       opts || (opts = {});
+      var inputObj = null;
+      if (toString.call(id) === '[object Object]') {
+        inputObj = id;
+        id = options.toId(obj);
+      }
       if (!id) {
         var err = new Error('must provide id to destroy');
         err.id = id;
@@ -84,9 +95,11 @@ module.exports = function (store, options) {
       store.destroy(id, opts, function (err, obj) {
         if (err) {
           err.saved = false;
+          err.id = id;
           return cb(err);
         }
-        if (options.destroy && opts.hooks !== false && typeof obj !== 'undefined' && obj !== null) {
+        if (!obj) obj = inputObj;
+        if (options.destroy && opts.hooks !== false && obj) {
           options.destroy.call(api, obj, opts, function (err) {
             if (err) {
               err.saved = true;
