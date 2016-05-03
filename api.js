@@ -15,8 +15,8 @@ module.exports = function (store, options) {
         opts = {};
       }
       opts || (opts = {});
-      if (!id) {
-        var err = new Error('must provide id to load');
+      if (typeof id !== 'string' || !id) {
+        var err = new Error('must provide id string to load');
         return cb(err);
       }
       store.load(id, opts, function (err, obj) {
@@ -33,13 +33,13 @@ module.exports = function (store, options) {
         opts = {};
       }
       opts || (opts = {});
-      if (!obj) {
+      if (!obj || toString.call(obj) !== '[object Object]') {
         var err = new Error('must provide obj to save');
         return cb(err);
       }
       var id = options.toId(obj);
-      if (!id) {
-        var err = new Error('could not get id to save');
+      if (typeof id !== 'string' || !id) {
+        var err = new Error('could not get id string to save');
         err.obj = obj;
         return cb(err);
       }
@@ -63,13 +63,13 @@ module.exports = function (store, options) {
           }
           if (retObj) obj = retObj;
           if (options.afterSave && opts.hooks !== false) {
-            options.afterSave.call(api, obj, opts, function (err) {
+            options.afterSave.call(api, obj, opts, function (err, retObj) {
               if (err) {
                 err.saved = true;
                 err.obj = obj;
                 return cb(err);
               }
-              cb(null, obj);
+              cb(null, retObj || obj);
             });
           }
           else cb(null, obj);
@@ -87,8 +87,8 @@ module.exports = function (store, options) {
         inputObj = id;
         id = options.toId(obj);
       }
-      if (!id) {
-        var err = new Error('must provide id to destroy');
+      if (typeof id !== 'string' || !id) {
+        var err = new Error('must provide id string to destroy');
         err.id = id;
         return cb(err);
       }
@@ -100,13 +100,13 @@ module.exports = function (store, options) {
         }
         if (!obj) obj = inputObj;
         if (options.destroy && opts.hooks !== false && obj) {
-          options.destroy.call(api, obj, opts, function (err) {
+          options.destroy.call(api, obj, opts, function (err, retObj) {
             if (err) {
               err.saved = true;
               err.obj = obj;
               return cb(err);
             }
-            cb(null, obj);
+            cb(null, retObj || obj);
           });
         }
         else cb(null, obj);
@@ -123,13 +123,20 @@ module.exports = function (store, options) {
         var latch = objs.length, errored = false;
         if (latch && options.load && opts.hooks !== false) {
           objs.forEach(function (obj, idx) {
-            options.load.call(api, obj, opts, function (err, obj) {
+            if (!obj || toString.call(obj) !== '[object Object]') {
+              errored = true;
+              var err = new Error('store returned non-object');
+              err.obj = obj;
+              return cb(err);
+            }
+            options.load.call(api, obj, opts, function (err, retObj) {
               if (errored) return;
               if (err) {
                 errored = true;
+                err.obj = obj;
                 return cb(err);
               }
-              objs[idx] = obj;
+              objs[idx] = retObj || obj;
               if (!--latch) return cb(null, objs);
             });
           });

@@ -8,6 +8,12 @@ module.exports = function (backend, backend_options) {
     var coll = api(store, coll_options);
     coll.in = function () {
       var key_prefix = [].slice.call(arguments);
+      if (!key_prefix.length) throw new Error('must provide key string to collection.in()')
+      key_prefix.forEach(function (k) {
+        if (typeof k !== 'string' || !k) {
+          throw new Error('must provide key string to collection.in()')
+        }
+      });
       // shallow-copy options and append key prefix.
       var opts = {};
       Object.keys(backend_options).forEach(function (k) {
