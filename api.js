@@ -8,6 +8,14 @@ module.exports = function (store, options) {
       return obj.id;
     };
   }
+  function makeCb (cb) {
+    return function () {
+      var args = [].slice.call(arguments)
+      setImmediate(function () {
+        cb.apply(args)
+      })
+    }
+  }
   var api = {
     load: function (id, opts, cb) {
       if (typeof opts === 'function') {
@@ -15,6 +23,7 @@ module.exports = function (store, options) {
         opts = {};
       }
       opts || (opts = {});
+      cb = makeCb(cb)
       if (typeof id !== 'string' || !id) {
         var err = new Error('must provide id string to load');
         return cb(err);
@@ -33,6 +42,7 @@ module.exports = function (store, options) {
         opts = {};
       }
       opts || (opts = {});
+      cb = makeCb(cb)
       if (!obj || toString.call(obj) !== '[object Object]') {
         var err = new Error('must provide obj to save');
         return cb(err);
@@ -82,6 +92,7 @@ module.exports = function (store, options) {
         opts = {};
       }
       opts || (opts = {});
+      cb = makeCb(cb)
       var inputObj = null;
       if (toString.call(id) === '[object Object]') {
         inputObj = id;
@@ -118,6 +129,7 @@ module.exports = function (store, options) {
         opts = {};
       }
       opts || (opts = {});
+      cb = makeCb(cb)
       store.select(opts, function (err, objs) {
         if (err) return cb(err);
         var latch = objs.length, errored = false;
