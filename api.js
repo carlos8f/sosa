@@ -12,7 +12,7 @@ module.exports = function (store, options) {
     return function () {
       var args = [].slice.call(arguments)
       setImmediate(function () {
-        cb.apply(args)
+        cb.apply(api, args)
       })
     }
   }
